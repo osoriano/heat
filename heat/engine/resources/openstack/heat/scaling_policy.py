@@ -190,7 +190,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
             group.adjust(
                 self.properties[self.SCALING_ADJUSTMENT],
                 self.properties[self.ADJUSTMENT_TYPE],
-                self.properties[self.MIN_ADJUSTMENT_STEP])
+                self.properties[self.MIN_ADJUSTMENT_STEP],
+                signal=True)
             size_changed = True
         except Exception as ex:
             if not isinstance(ex, exception.NoActionRequired):

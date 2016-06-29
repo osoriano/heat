@@ -279,7 +279,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
 
     def adjust(self, adjustment,
                adjustment_type=sc_util.CFN_CHANGE_IN_CAPACITY,
-               min_adjustment_step=None):
+               min_adjustment_step=None, signal=False):
         """Adjust the size of the scaling group if the cooldown permits."""
         if self.status != self.COMPLETE:
             LOG.info(_LI("%s NOT performing scaling adjustment, "
@@ -295,7 +295,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                          "as there is no change in capacity.") % self.name)
             raise exception.NoActionRequired()
 
-        if not self._is_scaling_allowed():
+        if not self._is_scaling_allowed(signal=signal):
             LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
                          "cooldown %(cooldown)s") % {
                 'name': self.name,

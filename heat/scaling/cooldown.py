@@ -23,9 +23,9 @@ class CooldownMixin(object):
     This logic includes both cooldown timestamp comparing and scaling in
     progress checking.
     """
-    def _is_scaling_allowed(self):
+    def _is_scaling_allowed(self, signal=False):
         metadata = self.metadata_get()
-        if metadata.get('scaling_in_progress'):
+        if metadata.get('scaling_in_progress') and not signal:
             return False
         try:
             # Negative values don't make sense, so they are clamped to zero
@@ -45,6 +45,9 @@ class CooldownMixin(object):
                 else:
                     last_adjust = next(six.iterkeys(metadata['cooldown']))
                     if not timeutils.is_older_than(last_adjust, cooldown):
+                        if metadata.get('scaling_in_progress'):
+                            metadata['scaling_in_progress'] = False
+                            self.metadata_set(metadata)
                         return False
             except ValueError:
                 # occurs when metadata has only {scaling_in_progress: False}
@@ -52,8 +55,9 @@ class CooldownMixin(object):
 
         # Assumes _finished_scaling is called
         # after the scaling operation completes
-        metadata['scaling_in_progress'] = True
-        self.metadata_set(metadata)
+        if not metadata.get('scaling_in_progress'):
+            metadata['scaling_in_progress'] = True
+            self.metadata_set(metadata)
         return True
 
     def _finished_scaling(self, cooldown_reason, size_changed=True):
